@@ -8,11 +8,6 @@ from std_msgs.msg import Bool
 import time
 import traceback
 
-import Adafruit_PCA9685
-
-# Initialise the PWM device using the default address
-pwm = Adafruit_PCA9685.PCA9685()
-
 # Get parameters?
 # integral_error_max = rospy.get_param('/vel_integral_limit')
 servo_pulse_frequency = 50
@@ -20,12 +15,6 @@ servo_pulse_frequency = 50
 servo_pulse_duration_us = 1.0e6 / servo_pulse_frequency
 # Counter is 12-bit, so 4096 levels (0-4095)
 servo_pulse_width_to_count_multiplier = 1. / servo_pulse_duration_us * 4095.0
-
-# Set the Frequency of all servo outputs
-pwm.set_pwm_freq(servo_pulse_frequency)
-
-# Shut down servos until they get a real command (temporary)
-pwm.set_all_pwm(0, 0)
 
 # angle range
 angle_range = np.array([-90., 90.])
@@ -43,8 +32,6 @@ def command_servo(pulse_width_us):
       round(
           pulse_width_us
           * servo_pulse_width_to_count_multiplier))
-  # set_pwm(servo_number, 0, pulse_width_count)
-  pwm.set_pwm(0, 0, pulse_width_count)
 
 
 def find_object(msg_in):
