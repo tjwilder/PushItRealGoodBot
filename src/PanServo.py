@@ -117,4 +117,5 @@ if __name__ == '__main__':
     panner()
   except rospy.ROSInterruptException:
     traceback.print_exc()
+    command_servo(0)
     pass
