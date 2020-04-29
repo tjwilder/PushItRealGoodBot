@@ -10,7 +10,7 @@ import traceback
 
 # Get parameters?
 # integral_error_max = rospy.get_param('/vel_integral_limit')
-servo_pulse_frequency = 50
+servo_pulse_frequency = 60
 # microseconds for each pulse
 servo_pulse_duration_us = 1.0e6 / servo_pulse_frequency
 # Counter is 12-bit, so 4096 levels (0-4095)

@@ -15,7 +15,7 @@ pwm = Adafruit_PCA9685.PCA9685()
 
 # Get parameters?
 # integral_error_max = rospy.get_param('/vel_integral_limit')
-servo_pulse_frequency = 50
+servo_pulse_frequency = 60
 # microseconds for each pulse
 servo_pulse_duration_us = 1.0e6 / servo_pulse_frequency
 # Counter is 12-bit, so 4096 levels (0-4095)
@@ -30,7 +30,7 @@ pwm.set_all_pwm(0, 0)
 # angle range
 angle_range = np.array([-90., 90.])
 # microseconds range
-us_range = np.array([500, 2500])
+us_range = np.array([410, 2500])
 
 # Remember panning position
 panning = False
@@ -53,6 +53,27 @@ def find_object(msg_in):
     panning = True
 
 
+def pan(start, end, t_max):
+  print('Calculating trajectory and panning servo')
+  # duration of trajectory
+  # How often can you send a command to the servo?
+  dt_traj = 1. / servo_pulse_frequency
+  n = np.int(np.ceil(t_max / dt_traj))
+  # Time array for the trajectory
+  traj_time = np.linspace(0., t_max, n)
+  # ANGLES array for the trajectory
+  traj_ang = np.linspace(-90., 90., n)
+
+  tstart = time.time()
+  while time.time() - tstart < t_max:
+    t_elapsed = time.time() - tstart
+    angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
+    pulse_to_command = np.interp(angle_to_command, angle_range, us_range)
+    command_servo(pulse_to_command)
+    print(angle_to_command)
+    time.sleep(dt_traj / 10.)
+
+
 def panner():
   global panning
   rospy.init_node('pan_servo', anonymous=False)
@@ -66,47 +87,11 @@ def panner():
       time.sleep(.2)
       continue
 
-    print('Calculating trajectory and panning servo')
-    # duration of trajectory
     t_max = 5.
-    # How often can you send a command to the servo?
-    dt_traj = 1. / servo_pulse_frequency
-    n = np.int(np.ceil(t_max / dt_traj))
-    # Time array for the trajectory
-    traj_time = np.linspace(0., t_max, n)
-    # ANGLES array for the trajectory
-    traj_ang = np.linspace(-90., 90., n)
-
-    tstart = time.time()
-    while time.time() - tstart < t_max:
-      t_elapsed = time.time() - tstart
-      angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
-      command_servo(
-          np.interp(
-              angle_to_command,
-              angle_range,
-              us_range))
-      print(angle_to_command)
-      time.sleep(dt_traj / 10.)
-
-    # Pan back to center in 50% the time
+    pan(0, -90, t_max / 2)
+    pan(-90, 90, t_max)
     print('Panning back to center')
-    # Time array for the trajectory
-    traj_time = np.linspace(0, t_max / 2, n / 2)
-    # ANGLES array for the trajectory
-    traj_ang = np.linspace(90, 0, n / 2)
-
-    tstart = time.time()
-    while time.time() - tstart < t_max:
-      t_elapsed = time.time() - tstart
-      angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
-      command_servo(
-          np.interp(
-              angle_to_command,
-              angle_range,
-              us_range))
-      print(angle_to_command)
-      time.sleep(dt_traj / 10.)
+    pan(90, 0, t_max / 2)
 
     panning = False
     find_publisher.publish(Bool(False))
