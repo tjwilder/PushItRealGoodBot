@@ -4,7 +4,7 @@
 # from mobrob_util.msg import ME439SensorsRaw
 import numpy as np
 import rospy
-from std_msgs.msg import Bool, Int
+from std_msgs.msg import Bool, Int8
 import time
 import traceback
 
@@ -70,7 +70,7 @@ def pan(start, end, t_max, pub):
     angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
     pulse_to_command = np.interp(angle_to_command, angle_range, us_range)
     command_servo(pulse_to_command)
-    pub.publish(Int(int(angle_to_command)))
+    pub.publish(Int8(int(angle_to_command)))
     print(angle_to_command)
     time.sleep(dt_traj / 10.)
 
@@ -81,7 +81,7 @@ def panner():
 
   # Register publisher and subscriber
   find_publisher = rospy.Publisher('/find_object', Bool, queue_size=1)
-  angle_publisher = rospy.Publisher('/servo_angle', Int, queue_size=1)
+  angle_publisher = rospy.Publisher('/servo_angle', Int8, queue_size=1)
   rospy.Subscriber('/find_object', Bool, find_object)
 
   while not rospy.is_shutdown():
