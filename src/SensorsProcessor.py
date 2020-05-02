@@ -23,7 +23,7 @@ def sensors_listener():
     # Set up a listener for the topic you want
     # Remember to name a "callback" function (must define below) to handle the
     # data
-    sub_A0 = rospy.Subscriber('/sensors_A0', Int32, cal_and_pub_A0)
+    rospy.Subscriber('/sensors_A0', Int32, cal_and_pub_A0)
 
     # spin() to prevent the function from exiting
     rospy.spin()
