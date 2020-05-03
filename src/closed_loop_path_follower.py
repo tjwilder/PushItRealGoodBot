@@ -66,8 +66,6 @@ pub_speeds = rospy.Publisher('/wheel_speeds_desired',
 # "segment_complete", with message type "Bool"
 pub_segment_complete = rospy.Publisher('/segment_complete', Bool, queue_size=1)
 
-# CODE END
-
 
 # Set up the node and its subscriptions, and keep it alive.
 def start_node():
