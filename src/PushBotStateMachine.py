@@ -49,7 +49,7 @@ def talker():
     rospy.Subscriber('/sensors_data_processed', ME439SensorsProcessed,
                      process_sensor_data)
     # TODO: Fix data type to be location
-    rospy.Subscriber('/found_object', Bool, queue_size=1)
+    rospy.Subscriber('/found_object', Pose2D, queue_size=1)
 
     # Start by finding the object
     state = states['Scan']
@@ -127,7 +127,7 @@ def process_sensor_data(msg):
     global state, x, y
     if state == states['Push']:
         # If there's not an object directly ahead, find it
-        if msg.u1meters > .1:
+        if msg.u0meters > .1:
             state = states['Scan']
             # "Go to" the current location
             publish_waypoint([x, y])
@@ -135,11 +135,14 @@ def process_sensor_data(msg):
 
 
 def found_object(msg):
-    global state, waypoints, goal
+    global state, waypoints, goal, x, y
     # Store object location
 
     # Scan => Reposition
     if state == states['Scan']:
+        # Add msg's relative position to global robot position
+        o_x = msg.x + x
+        o_y = msg.y + y
         # Calculate line between object and goal
         dx = goal[0] - o_x
         dy = goal[1] - o_y
