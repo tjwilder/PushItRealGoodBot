@@ -4,7 +4,7 @@
 # from mobrob_util.msg import ME439SensorsRaw
 import numpy as np
 import rospy
-from std_msgs.msg import Bool, Int
+from std_msgs.msg import Bool, Int8
 import time
 import traceback
 
@@ -62,7 +62,7 @@ def pan(start, end, t_max, pub):
   # Time array for the trajectory
   traj_time = np.linspace(0., t_max, n)
   # ANGLES array for the trajectory
-  traj_ang = np.linspace(-90., 90., n)
+  traj_ang = np.linspace(start, end, n)
 
   tstart = time.time()
   while time.time() - tstart < t_max:
@@ -70,7 +70,7 @@ def pan(start, end, t_max, pub):
     angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
     pulse_to_command = np.interp(angle_to_command, angle_range, us_range)
     command_servo(pulse_to_command)
-    pub.publish(Int(int(angle_to_command)))
+    pub.publish(Int8(int(angle_to_command)))
     print(angle_to_command)
     time.sleep(dt_traj / 10.)
 
@@ -81,7 +81,7 @@ def panner():
 
   # Register publisher and subscriber
   find_publisher = rospy.Publisher('/find_object', Bool, queue_size=1)
-  angle_publisher = rospy.Publisher('/servo_angle', Int, queue_size=1)
+  angle_publisher = rospy.Publisher('/servo_angle', Int8, queue_size=1)
   rospy.Subscriber('/find_object', Bool, find_object)
 
   while not rospy.is_shutdown():
@@ -89,12 +89,11 @@ def panner():
       time.sleep(.2)
       continue
 
-    t_max = 5.
-    pan(0, -90, t_max / 2, angle_publisher)
-    time.sleep(1)
+    t_max = 8.
+    pan(-25, -90, t_max / 2, angle_publisher)
     pan(-90, 90, t_max, angle_publisher)
     print('Panning back to center')
-    pan(90, 0, t_max / 2, angle_publisher)
+    pan(90, -25, t_max / 2, angle_publisher)
 
     panning = False
     find_publisher.publish(Bool(False))
