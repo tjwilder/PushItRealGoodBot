@@ -1,0 +1,30 @@
+<launch>
+  <rosparam command="load" file="$(find mobrob_util)/src/robot_info.yaml" />
+  <!-- Add a parameter that finds the SVG file with the path to follow. You can change the path file by entering its name. --> 
+  <param name="path_file_svg" value="$(find mobrob)/src/SVGtest.svg" />
+
+  <group ns="robot_operate">
+    <node pkg="PushItRealGoodBot" name="sensing_and_control_node" type="sensing_and_wheel_control_node_v02.py"/>
+    <node pkg="PushItRealGoodBot" name="sensors_processing_node" type="sensors_processing_v01.py"/>
+  </group>
+
+
+ <!-- "dead_reckoning" and an "animator" to draw where the robot thinks it is. -->
+  <group ns="robot_estimate">
+    <!-- first a "dead reckoning" node -->
+    <node pkg="PushItRealGoodBot" name="dead_reckoning" type="dead_reckoning_v01.py" />
+
+    <!-- then an "animator" node, remapped to "/robot_pose_estimated" instead of "/robot_pose_simulated"  -->
+    <node pkg="PushItRealGoodBot" name="dead_reckoning_animator" type="mobile_robot_animator_v00.py" >
+        <remap from="/robot_pose_simulated" to="/robot_pose_estimated"/>
+    </node>
+  </group>
+
+  <group ns="robot_control">
+    <node pkg="PushItRealGoodBot" name="closed_loop_path_follower" type="closed_loop_path_follower.py"/>    
+    <node pkg="PushItRealGoodBot" name="waypoint_seeker" type="waypoint_seeker.py"/>
+    <!-- <node pkg="PushItRealGoodBot" name="set_waypoints" type="set_waypoints.py"/> -->
+    <node pkg="PushItRealGoodBot" name="state_machine" type="PushBotStateMachine.py"/>
+    <node pkg="PushItRealGoodBot" name="pan_servo" type="PanServo.py"/>
+  </group>
+</launch>

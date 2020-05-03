@@ -10,6 +10,8 @@ import traceback
 
 import Adafruit_PCA9685
 
+from mobrob_util.msg import ME439SensorsProcessed
+from geometry_msgs.msg import Pose2D
 # Initialise the PWM device using the default address
 pwm = Adafruit_PCA9685.PCA9685()
 
@@ -54,6 +56,7 @@ def find_object(msg_in):
 
 
 def pan(start, end, t_max, pub):
+  global angle
   print('Calculating trajectory and panning servo')
   # duration of trajectory
   # How often can you send a command to the servo?
@@ -71,33 +74,67 @@ def pan(start, end, t_max, pub):
     pulse_to_command = np.interp(angle_to_command, angle_range, us_range)
     command_servo(pulse_to_command)
     pub.publish(Int8(int(angle_to_command)))
+
+
+    angle = angle_to_command
+
     print(angle_to_command)
     time.sleep(dt_traj / 10.)
+    
+sensor_data = []      #create empty list of sensor data
 
-
+def receivesensordata(msg_in):
+    global angle
+    global sensor_data
+    sensor_data.append((angle,msg_in.u0meters))
+    
+def min_angledist():
+    global sensor_data
+    min_pair = (0,100)
+    for data in sensor_data:
+        if data[1] < min_pair[1]:
+            min_pair = data
+    return min_pair
+    
+def calc_obj_pos(pair):
+    y_obj = 0.2 + np.cos(pair[0])*(pair[1]+0.1) #fix 0.2 and 0.1 offsets if needed
+    x_obj = np.sin(pair[0])*(pair[1]+0.1)
+    return x_obj,y_obj
+    
 def panner():
   global panning
+  global sensor_data
   rospy.init_node('pan_servo', anonymous=False)
 
   # Register publisher and subscriber
   find_publisher = rospy.Publisher('/find_object', Bool, queue_size=1)
   angle_publisher = rospy.Publisher('/servo_angle', Int8, queue_size=1)
   rospy.Subscriber('/find_object', Bool, find_object)
+  rospy.Subscriber('/sensors_data_processed',ME439SensorsProcessed,receivesensordata)
+  found_publisher = rospy.Publisher('/found_object', Pose2D, queue_size=1)
+  
 
   while not rospy.is_shutdown():
     if not panning:
       time.sleep(.2)
       continue
 
+    sensor_data = []
     t_max = 8.
     pan(-25, -90, t_max / 2, angle_publisher)
+
     pan(-90, 90, t_max, angle_publisher)
     print('Panning back to center')
     pan(90, -25, t_max / 2, angle_publisher)
 
     panning = False
     find_publisher.publish(Bool(False))
-
+    pair = min_angledist()
+    xy = calc_obj_pos(pair)
+    Pose = Pose2D()
+    Pose.x = xy[0]
+    Pose.y = xy[1]
+    found_publisher.publish(Pose)
 
 if __name__ == '__main__':
   try:
