@@ -1,6 +1,5 @@
 <launch>
   <rosparam command="load" file="$(find mobrob_util)/src/robot_info.yaml" />
-  <!-- Add a parameter that finds the SVG file with the path to follow. You can change the path file by entering its name. --> 
 
   <group ns="robot_operate">
     <node pkg="PushItRealGoodBot" name="sensing_and_control_node" type="sensing_and_wheel_control_node_v02.py"/>

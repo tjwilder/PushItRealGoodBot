@@ -41,105 +41,111 @@ panningCoords = []
 
 # Function to command any servo with a given pulse width in microseconds
 def command_servo(pulse_width_us):
-  pulse_width_count = int(
-      round(
-          pulse_width_us
-          * servo_pulse_width_to_count_multiplier))
-  # set_pwm(servo_number, 0, pulse_width_count)
-  pwm.set_pwm(0, 0, pulse_width_count)
+    pulse_width_count = int(
+        round(pulse_width_us * servo_pulse_width_to_count_multiplier))
+    # set_pwm(servo_number, 0, pulse_width_count)
+    pwm.set_pwm(0, 0, pulse_width_count)
 
 
 def find_object(msg_in):
-  global panning
-  if msg_in.data:
-    panning = True
+    global panning
+    if msg_in.data:
+        panning = True
 
 
 def pan(start, end, t_max, pub):
-  global angle
-  print('Calculating trajectory and panning servo')
-  # duration of trajectory
-  # How often can you send a command to the servo?
-  dt_traj = 1. / servo_pulse_frequency
-  n = np.int(np.ceil(t_max / dt_traj))
-  # Time array for the trajectory
-  traj_time = np.linspace(0., t_max, n)
-  # ANGLES array for the trajectory
-  traj_ang = np.linspace(start, end, n)
+    global angle
+    print('Calculating trajectory and panning servo')
+    # duration of trajectory
+    # How often can you send a command to the servo?
+    dt_traj = 1. / servo_pulse_frequency
+    n = np.int(np.ceil(t_max / dt_traj))
+    # Time array for the trajectory
+    traj_time = np.linspace(0., t_max, n)
+    # ANGLES array for the trajectory
+    traj_ang = np.linspace(start, end, n)
 
-  tstart = time.time()
-  while time.time() - tstart < t_max:
-    t_elapsed = time.time() - tstart
-    angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
-    pulse_to_command = np.interp(angle_to_command, angle_range, us_range)
-    command_servo(pulse_to_command)
-    pub.publish(Int8(int(angle_to_command)))
+    tstart = time.time()
+    while time.time() - tstart < t_max:
+        t_elapsed = time.time() - tstart
+        angle_to_command = traj_ang[traj_time <= t_elapsed][-1]
+        pulse_to_command = np.interp(angle_to_command, angle_range, us_range)
+        command_servo(pulse_to_command)
+        pub.publish(Int8(int(angle_to_command)))
+
+        angle = angle_to_command
+
+        print(angle_to_command)
+        time.sleep(dt_traj / 10.)
 
 
-    angle = angle_to_command
+sensor_data = []  # create empty list of sensor data
 
-    print(angle_to_command)
-    time.sleep(dt_traj / 10.)
-    
-sensor_data = []      #create empty list of sensor data
 
 def receivesensordata(msg_in):
     global angle
     global sensor_data
-    sensor_data.append((angle,msg_in.u0meters))
-    
+    sensor_data.append((angle, msg_in.a0))
+
+
 def min_angledist():
     global sensor_data
-    min_pair = (0,100)
+    min_pair = (0, 100)
     for data in sensor_data:
         if data[1] < min_pair[1]:
             min_pair = data
     return min_pair
-    
+
+
 def calc_obj_pos(pair):
-    y_obj = 0.2 + np.cos(pair[0])*(pair[1]+0.1) #fix 0.2 and 0.1 offsets if needed
-    x_obj = np.sin(pair[0])*(pair[1]+0.1)
-    return x_obj,y_obj
-    
+    y_obj = 0.2 + np.cos(pair[0]) * (pair[1] + 0.1
+                                     )  # fix 0.2 and 0.1 offsets if needed
+    x_obj = np.sin(pair[0]) * (pair[1] + 0.1)
+    return x_obj, y_obj
+
+
 def panner():
-  global panning
-  global sensor_data
-  rospy.init_node('pan_servo', anonymous=False)
+    global panning
+    global sensor_data
+    rospy.init_node('pan_servo', anonymous=False)
 
-  # Register publisher and subscriber
-  find_publisher = rospy.Publisher('/find_object', Bool, queue_size=1)
-  angle_publisher = rospy.Publisher('/servo_angle', Int8, queue_size=1)
-  rospy.Subscriber('/find_object', Bool, find_object)
-  rospy.Subscriber('/sensors_data_processed',ME439SensorsProcessed,receivesensordata)
-  found_publisher = rospy.Publisher('/found_object', Pose2D, queue_size=1)
-  
+    # Register publisher and subscriber
+    find_publisher = rospy.Publisher('/find_object', Bool, queue_size=1)
+    angle_publisher = rospy.Publisher('/servo_angle', Int8, queue_size=1)
+    rospy.Subscriber('/find_object', Bool, find_object)
+    rospy.Subscriber('/sensors_data_processed', ME439SensorsProcessed,
+                     receivesensordata)
+    found_publisher = rospy.Publisher('/found_object', Pose2D, queue_size=1)
 
-  while not rospy.is_shutdown():
-    if not panning:
-      time.sleep(.2)
-      continue
+    while not rospy.is_shutdown():
+        if not panning:
+            time.sleep(.2)
+            continue
 
-    sensor_data = []
-    t_max = 8.
-    pan(-25, -90, t_max / 2, angle_publisher)
+        sensor_data = []
+        t_max = 8.
+        pan(-25, -90, t_max / 2, angle_publisher)
 
-    pan(-90, 90, t_max, angle_publisher)
-    print('Panning back to center')
-    pan(90, -25, t_max / 2, angle_publisher)
+        pan(-90, 90, t_max, angle_publisher)
+        print('Panning back to center')
+        pan(90, -25, t_max / 2, angle_publisher)
 
-    panning = False
-    find_publisher.publish(Bool(False))
-    pair = min_angledist()
-    xy = calc_obj_pos(pair)
-    Pose = Pose2D()
-    Pose.x = xy[0]
-    Pose.y = xy[1]
-    found_publisher.publish(Pose)
+        panning = False
+        find_publisher.publish(Bool(False))
+        pair = min_angledist()
+        xy = calc_obj_pos(pair)
+        Pose = Pose2D()
+        # Pose.x = xy[0]
+        # Pose.y = xy[1]
+        Pose.x = -.3
+        Pose.y = .3
+        found_publisher.publish(Pose)
+
 
 if __name__ == '__main__':
-  try:
-    panner()
-  except rospy.ROSInterruptException:
-    traceback.print_exc()
-    command_servo(0)
-    pass
+    try:
+        panner()
+    except rospy.ROSInterruptException:
+        traceback.print_exc()
+        command_servo(0)
+        pass
