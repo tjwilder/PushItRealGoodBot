@@ -1,7 +1,6 @@
 <launch>
   <rosparam command="load" file="$(find mobrob_util)/src/robot_info.yaml" />
   <!-- Add a parameter that finds the SVG file with the path to follow. You can change the path file by entering its name. --> 
-  <param name="path_file_svg" value="$(find mobrob)/src/SVGtest.svg" />
 
   <group ns="robot_operate">
     <node pkg="PushItRealGoodBot" name="sensing_and_control_node" type="sensing_and_wheel_control_node_v02.py"/>
@@ -24,7 +23,7 @@
     <node pkg="PushItRealGoodBot" name="closed_loop_path_follower" type="closed_loop_path_follower.py"/>    
     <node pkg="PushItRealGoodBot" name="waypoint_seeker" type="waypoint_seeker.py"/>
     <!-- <node pkg="PushItRealGoodBot" name="set_waypoints" type="set_waypoints.py"/> -->
-    <node pkg="PushItRealGoodBot" name="state_machine" type="PushBotStateMachine.py"/>
-    <node pkg="PushItRealGoodBot" name="pan_servo" type="PanServo.py"/>
+    <node pkg="PushItRealGoodBot" name="state_machine" type="push_bot_state_machine.py"/>
+    <node pkg="PushItRealGoodBot" name="pan_servo" type="pan_servo.py"/>
   </group>
 </launch>

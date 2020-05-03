@@ -33,9 +33,9 @@ theta = 0
 # Publish desired waypoints at the appropriate time.
 def talker():
     global waypoints, waypoint_number, path_complete, pub_waypoint
-    global pub_path_complete, pub_find_object, states
+    global pub_path_complete, pub_find_object, states, state
     # Launch this node with the name "set_waypoints"
-    rospy.init_node('set_waypoints', anonymous=False)
+    rospy.init_node('state_machine', anonymous=False)
 
     pub_waypoint = rospy.Publisher('/waypoint_xy',
                                    ME439WaypointXY,
@@ -124,7 +124,7 @@ def update_location(msg):
 
 
 def process_sensor_data(msg):
-    global state, x, y
+    global states, state, x, y
     if state == states['Push']:
         # If there's not an object directly ahead, find it
         if msg.u0meters > .1:
@@ -135,7 +135,7 @@ def process_sensor_data(msg):
 
 
 def found_object(msg):
-    global state, waypoints, goal, x, y
+    global states, state, waypoints, goal, x, y
     # Store object location
 
     # Scan => Reposition

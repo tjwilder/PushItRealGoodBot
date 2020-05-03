@@ -81,7 +81,7 @@ def talker():
         Kd=Kd0,
         error_integral_limit=integral_error_max,
         integral_resetting=integral_resetting,
-        motor_command_max_rate_of_change=cmd_rate_of_change_max,
+        motor_command_max_change_rate=cmd_rate_of_change_max,
         motor_command_max=motor_command_max,
         forward_motor_command_sign=m0_direction_sign)
     mc1 = encmot.FPID_controller(
@@ -92,7 +92,7 @@ def talker():
         Kd=Kd1,
         error_integral_limit=integral_error_max,
         integral_resetting=integral_resetting,
-        motor_command_max_rate_of_change=cmd_rate_of_change_max,
+        motor_command_max_change_rate=cmd_rate_of_change_max,
         motor_command_max=motor_command_max,
         forward_motor_command_sign=m1_direction_sign)
 
