@@ -137,8 +137,8 @@ def panner():
     Pose = Pose2D()
     # Pose.x = xy[0]
     # Pose.y = xy[1]
-    Pose.x = -.3
-    Pose.y = .3
+    Pose.x = 0.001
+    Pose.y = 0.6
     rospy.logerr('Publishing pose %.2f, %.2f', xy[0], xy[1])
     rospy.logerr('Smallest: [%.2f, %.4f]', pair[0], pair[1])
     rospy.logerr('Printing sensor_data')
