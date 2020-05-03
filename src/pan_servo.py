@@ -41,18 +41,16 @@ panningCoords = []
 
 # Function to command any servo with a given pulse width in microseconds
 def command_servo(pulse_width_us):
-  pulse_width_count = int(
-      round(
-          pulse_width_us
-          * servo_pulse_width_to_count_multiplier))
-  # set_pwm(servo_number, 0, pulse_width_count)
-  pwm.set_pwm(0, 0, pulse_width_count)
+    pulse_width_count = int(
+        round(pulse_width_us * servo_pulse_width_to_count_multiplier))
+    # set_pwm(servo_number, 0, pulse_width_count)
+    pwm.set_pwm(0, 0, pulse_width_count)
 
 
 def find_object(msg_in):
-  global panning
-  if msg_in.data:
-    panning = True
+    global panning
+    if msg_in.data:
+        panning = True
 
 
 def pan(start, end, t_max, pub):
@@ -88,20 +86,24 @@ def receivesensordata(msg_in):
     global angle
     global sensor_data
     sensor_data.append((angle, msg_in.a0))
-    
+
+
 def min_angledist():
     global sensor_data
-    min_pair = (0,100)
+    min_pair = (0, 100)
     for data in sensor_data:
         if data[1] < min_pair[1]:
             min_pair = data
     return min_pair
-    
+
+
 def calc_obj_pos(pair):
-    y_obj = 0.2 + np.cos(pair[0])*(pair[1]+0.1) #fix 0.2 and 0.1 offsets if needed
-    x_obj = np.sin(pair[0])*(pair[1]+0.1)
-    return x_obj,y_obj
-    
+    y_obj = 0.2 + np.cos(pair[0]) * (pair[1] + 0.1
+                                     )  # fix 0.2 and 0.1 offsets if needed
+    x_obj = np.sin(pair[0]) * (pair[1] + 0.1)
+    return x_obj, y_obj
+
+
 def panner():
   global panning
   global sensor_data
@@ -133,8 +135,10 @@ def panner():
     pair = min_angledist()
     xy = calc_obj_pos(pair)
     Pose = Pose2D()
-    Pose.x = xy[0]
-    Pose.y = xy[1]
+    # Pose.x = xy[0]
+    # Pose.y = xy[1]
+    Pose.x = -.3
+    Pose.y = .3
     rospy.logerr('Publishing pose %.2f, %.2f', xy[0], xy[1])
     rospy.logerr('Smallest: [%.2f, %.4f]', pair[0], pair[1])
     rospy.logerr('Printing sensor_data')
@@ -143,9 +147,9 @@ def panner():
     found_publisher.publish(Pose)
 
 if __name__ == '__main__':
-  try:
-    panner()
-  except rospy.ROSInterruptException:
-    traceback.print_exc()
-    command_servo(0)
-    pass
+    try:
+        panner()
+    except rospy.ROSInterruptException:
+        traceback.print_exc()
+        command_servo(0)
+        pass

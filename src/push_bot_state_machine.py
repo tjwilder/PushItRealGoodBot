@@ -67,16 +67,20 @@ def talker():
                 time.sleep(5)
             elif state == states['Push']:
                 if path_complete.data:
+                    rospy.logerr('Goal reached')
                     state = states['Standby']
                 else:
-                    publish_waypoint(waypoints[waypoint_number, :])
+                    publish_waypoint(goal)
             elif state == states['Scan']:
                 # Wait for scan to complete
                 time.sleep(.2)
             elif state == states['Reposition']:
                 if path_complete.data:
+                    rospy.logerr('Repositioning complete, pushing')
                     state = states['Push']
                     publish_waypoint(goal)
+                else:
+                    publish_waypoint(waypoints[waypoint_number, :])
 
             r.sleep()
 
@@ -86,7 +90,9 @@ def talker():
 
 
 def publish_waypoint(waypoint):
-    global waypoints, pub_waypoint
+    global waypoints, pub_waypoint, path_complete
+    rospy.logerr('Commanding waypoint %.2f, %2f', waypoint[0], waypoint[1])
+    path_complete.data = False
     msg_waypoint = ME439WaypointXY()
     msg_waypoint.x = waypoint[0]
     msg_waypoint.y = waypoint[1]
@@ -100,6 +106,8 @@ def increment_waypoint(msg_in):
 
     if msg_in.data:
         waypoint_number = waypoint_number + 1
+
+    rospy.logerr('Incrementing to waypoint %d', waypoint_number)
 
     # Handle the last waypoint:
     # If the last waypoint was reached, set "path_complete" and publish it
@@ -137,11 +145,14 @@ def process_sensor_data(msg):
 
 
 def found_object(msg):
-    global states, state, waypoints, goal, x, y
+    global states, state, waypoints, waypoint_number, goal, x, y
     # Store object location
+    rospy.logerr('Found object at: %.2f %.2f', msg.x, msg.y)
+    rospy.logerr(state)
 
     # Scan => Reposition
     if state == states['Scan']:
+        rospy.logerr('Can complete; repositioning')
         # Add msg's relative position to global robot position
         o_x = msg.x + x
         o_y = msg.y + y
@@ -159,6 +170,7 @@ def found_object(msg):
         # Start .3m away from the object
         xs = [x - 0.3 * udx, x - 0.2 * udx, x - 0.1 * udx]
         waypoints = [[x, m * x + b] for x in xs]
+        waypoint_number = 0
 
         state = states['Reposition']
 
