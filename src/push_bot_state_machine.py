@@ -44,6 +44,8 @@ def talker():
     pub_path_complete = rospy.Publisher('/path_complete', Bool, queue_size=1)
     pub_find_object = rospy.Publisher('/find_object', Bool, queue_size=1)
 
+    # Wait for other nodes to start...
+    time.sleep(5)
     rospy.Subscriber('/waypoint_complete', Bool, increment_waypoint)
     rospy.Subscriber('/robot_pose_estimated', Pose2D, update_location)
     rospy.Subscriber('/sensors_data_processed', ME439SensorsProcessed,

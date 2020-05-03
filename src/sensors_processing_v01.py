@@ -74,7 +74,8 @@ def sensors_process(msg_in):
             msg_out.e0meterspersec = msg_out.e0radpersec * wheel_radius
             msg_out.e1meterspersec = msg_out.e1radpersec * wheel_radius
 
-            msg_out.a0 = float(msg_in.a0)
+            # msg_out.a0 = float(msg_in.a0)
+            msg_out.a0 = msg_in.a0 / 10.0e6 * speed_of_sound_meterspersec
 
             msg_out.u0meters = msg_in.u0 / 10.0e6 * speed_of_sound_meterspersec
             msg_out.u1meters = msg_in.u1 / 10.0e6 * speed_of_sound_meterspersec

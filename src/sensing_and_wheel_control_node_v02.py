@@ -18,8 +18,7 @@ from mobrob_util.msg import (ME439SensorsRaw, ME439WheelSpeeds,
 counts_per_encoder_revolution = rospy.get_param(
     '/counts_per_encoder_revolution')  # 12.0
 gear_ratio = rospy.get_param('/gear_ratio')  # standard ME439 robot: 120.0
-wheel_radius = rospy.get_param(
-    '/wheel_diameter_actual') / 2.0  # 0.030 # meters
+wheel_radius = rospy.get_param('/wheel_diameter_actual') / 2.0
 
 e0_direction_sign = rospy.get_param('/left_encoder_sign')
 e1_direction_sign = rospy.get_param('/right_encoder_sign')
@@ -248,7 +247,6 @@ def serial_port_publisher(quad_encoders, mot_controllers):
                 pub_sensors_message.a0 = data_value
             elif data_type == 'U1':
                 pub_sensors_message.u1 = data_value
-                newu2 = 1
             elif data_type == 'U2':
                 pub_sensors_message.u2 = data_value
                 newu2 = 1

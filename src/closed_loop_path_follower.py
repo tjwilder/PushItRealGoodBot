@@ -5,7 +5,6 @@ import numpy as np
 from mobrob_util.msg import ME439WheelSpeeds, ME439PathSpecs
 from geometry_msgs.msg import Pose2D
 from std_msgs.msg import Bool
-# REMEMBER to call the right file (version, or use the _HWK if needed)
 import me439_mobile_robot_class_v02 as m439rbt
 
 # global variable to hold the path specs currently being tracked
@@ -32,9 +31,7 @@ estimated_segment_completion_fraction_previous = 0.
 # =============================================================================
 
 # Get parameters from rosparam
-wheel_width = rospy.get_param(
-    '/wheel_width_model'
-)  # All you have when planning is a model - you never quite know the truth!
+wheel_width = rospy.get_param('/wheel_width_model')
 body_length = rospy.get_param('/body_length')
 wheel_diameter = rospy.get_param('/wheel_diameter_model')
 wheel_radius = wheel_diameter / 2.0

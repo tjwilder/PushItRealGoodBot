@@ -78,15 +78,16 @@ def pan(start, end, t_max, pub):
 
     angle = angle_to_command
 
-    print(angle_to_command)
+    rospy.loginfo(angle_to_command)
     time.sleep(dt_traj / 10.)
     
+angle = 0
 sensor_data = []      #create empty list of sensor data
 
 def receivesensordata(msg_in):
     global angle
     global sensor_data
-    sensor_data.append((angle,msg_in.u0meters))
+    sensor_data.append((angle, msg_in.a0))
     
 def min_angledist():
     global sensor_data
@@ -124,7 +125,7 @@ def panner():
     pan(-25, -90, t_max / 2, angle_publisher)
 
     pan(-90, 90, t_max, angle_publisher)
-    print('Panning back to center')
+    rospy.loginfo('Panning back to center')
     pan(90, -25, t_max / 2, angle_publisher)
 
     panning = False
@@ -134,6 +135,11 @@ def panner():
     Pose = Pose2D()
     Pose.x = xy[0]
     Pose.y = xy[1]
+    rospy.logerr('Publishing pose %.2f, %.2f', xy[0], xy[1])
+    rospy.logerr('Smallest: [%.2f, %.4f]', pair[0], pair[1])
+    rospy.logerr('Printing sensor_data')
+    for data in sensor_data:
+        rospy.logerr('[%.2f, %.4f]', data[0], data[1])
     found_publisher.publish(Pose)
 
 if __name__ == '__main__':
