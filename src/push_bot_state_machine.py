@@ -67,11 +67,11 @@ def talker():
                 time.sleep(5)
             elif state == states['Push']:
                 if path_complete.data or waypoint_number >= waypoints.shape[0]:
-                    rospy.logerr('Goal reached')
+                    rospy.loginfo('Goal reached')
                     state = states['Standby']
                     path_complete.data = True
 
-		    pub_path_complete.publish(path_complete)
+                    pub_path_complete.publish(path_complete)
                 else:
                     publish_waypoint([waypoints[waypoint_number, 0],
                                      waypoints[waypoint_number, 1]], False)
@@ -80,7 +80,7 @@ def talker():
                 time.sleep(.2)
             elif state == states['Reposition']:
                 if path_complete.data:
-                    rospy.logerr('Repositioning complete, pushing')
+                    rospy.loginfo('Repositioning complete, pushing')
                     state = states['Push']
                     waypoints = np.array([goal])
                     waypoint_number = 0
@@ -100,7 +100,7 @@ def talker():
 def publish_waypoint(waypoint, toPrint):
     global waypoints, pub_waypoint, path_complete
     if toPrint:
-        rospy.logerr('Commanding waypoint %.2f, %2f', waypoint[0], waypoint[1])
+        rospy.loginfo('Commanding waypoint %.2f, %2f', waypoint[0], waypoint[1])
     path_complete.data = False
     msg_waypoint = ME439WaypointXY()
     msg_waypoint.x = waypoint[0]
@@ -116,7 +116,7 @@ def increment_waypoint(msg_in):
     if msg_in.data:
         waypoint_number = waypoint_number + 1
 
-    rospy.logerr('Incrementing to waypoint %d', waypoint_number)
+    rospy.loginfo('Incrementing to waypoint %d', waypoint_number)
 
     # Handle the last waypoint:
     # If the last waypoint was reached, set "path_complete" and publish it
@@ -143,11 +143,9 @@ def update_location(msg):
 def process_sensor_data(msg):
     global states, state, x, y
     if state == states['Push']:
-        # OVERRIDE the object detection, just keep going
-        return
         # If there's not an object directly ahead, find it
         if msg.u0meters > .1:
-            rospy.logerr('Object lost; Scanning...')
+            rospy.loginfo('Object lost; Scanning...')
             state = states['Scan']
             # "Go to" the current location
             publish_waypoint([x, y], True)
@@ -157,12 +155,11 @@ def process_sensor_data(msg):
 def found_object(msg):
     global states, state, waypoints, waypoint_number, goal, x, y
     # Store object location
-    rospy.logerr('Found object at: %.2f %.2f', msg.x, msg.y)
-    rospy.logerr(state)
+    rospy.loginfo('Found object at: %.2f %.2f', msg.x, msg.y)
 
     # Scan => Reposition
     if state == states['Scan']:
-        rospy.logerr('Scan complete; repositioning')
+        rospy.loginfo('Scan complete; repositioning')
         # Add msg's relative position to global robot position
         o_x = msg.x + x
         o_y = msg.y + y
@@ -182,8 +179,8 @@ def found_object(msg):
         waypoints = np.array([[x1, m * x1 + b] for x1 in xs])
         waypoint_number = 0
 
-        rospy.logerr('Locations: R=(%.2f, %.2f), O=(%.2f, %.2f), W=(%.2f, %.2f)',
-                     x, y, o_x, o_y, waypoints[0, 0], waypoints[0, 1])
+        # rospy.loginfo('Locations: R=(%.2f, %.2f), O=(%.2f, %.2f), W=(%.2f, %.2f)',
+        #               x, y, o_x, o_y, waypoints[0, 0], waypoints[0, 1])
 
         state = states['Reposition']
 

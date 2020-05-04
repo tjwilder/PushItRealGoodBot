@@ -78,7 +78,7 @@ def pan(start, end, t_max, pub):
 
     rospy.loginfo(angle_to_command)
     time.sleep(dt_traj / 10.)
-    
+
 angle = 0
 sensor_data = []      #create empty list of sensor data
 
@@ -113,9 +113,8 @@ def panner():
   find_publisher = rospy.Publisher('/find_object', Bool, queue_size=1)
   angle_publisher = rospy.Publisher('/servo_angle', Int8, queue_size=1)
   rospy.Subscriber('/find_object', Bool, find_object)
-  rospy.Subscriber('/sensors_data_processed',ME439SensorsProcessed,receivesensordata)
+  rospy.Subscriber('/sensors_data_processed', ME439SensorsProcessed, receivesensordata)
   found_publisher = rospy.Publisher('/found_object', Pose2D, queue_size=1)
-  
 
   while not rospy.is_shutdown():
     if not panning:
@@ -135,15 +134,9 @@ def panner():
     pair = min_angledist()
     xy = calc_obj_pos(pair)
     Pose = Pose2D()
-    # Pose.x = xy[0]
-    # Pose.y = xy[1]
-    Pose.x = 0.001
-    Pose.y = 0.6
-    rospy.logerr('Publishing pose %.2f, %.2f', xy[0], xy[1])
-    rospy.logerr('Smallest: [%.2f, %.4f]', pair[0], pair[1])
-    rospy.logerr('Printing sensor_data')
-    for data in sensor_data:
-        rospy.logerr('[%.2f, %.4f]', data[0], data[1])
+    Pose.x = xy[0]
+    Pose.y = xy[1]
+    # rospy.loginfo('Publishing object position %.2f, %.2f', xy[0], xy[1])
     found_publisher.publish(Pose)
 
 if __name__ == '__main__':
